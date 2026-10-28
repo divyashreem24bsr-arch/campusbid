@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import api from "../api/api";
 
 export default function CreateListing() {
+  const navigate = useNavigate();
   const [form, setForm] = useState({
     title: "",
     category: "Textbooks",
@@ -14,6 +15,7 @@ export default function CreateListing() {
   });
   const [images, setImages] = useState([]);
   const [uploading, setUploading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
   const handleChange = (e) => {
@@ -90,6 +92,72 @@ export default function CreateListing() {
     }
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+
+    if (!form.title.trim() || !form.description.trim()) {
+      setError("Please enter the item title and description.");
+      return;
+    }
+
+    const startingPrice = Number(form.startingPrice);
+    const minIncrement = Number(form.minIncrement);
+    if (
+      !Number.isInteger(startingPrice) ||
+      startingPrice < 1 ||
+      startingPrice > 10000000 ||
+      !Number.isInteger(minIncrement) ||
+      minIncrement < 1 ||
+      minIncrement > 10000000
+    ) {
+      setError("Prices must be whole numbers from ₹1 to ₹1 crore.");
+      return;
+    }
+
+    const closingDate = new Date(form.closesAt);
+    const now = new Date();
+    const maxClosingDate = new Date(
+      now.getTime() + 30 * 24 * 60 * 60 * 1000
+    );
+
+    if (
+      !form.closesAt ||
+      Number.isNaN(closingDate.getTime()) ||
+      closingDate.getTime() < now.getTime() + 5 * 60 * 1000 ||
+      closingDate > maxClosingDate
+    ) {
+      setError("Choose a closing date between 5 minutes and 30 days from now.");
+      return;
+    }
+
+    if (images.length === 0) {
+      setError("Please upload at least one item image.");
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      await api.post("/listings", {
+        ...form,
+        startingPrice: Number(form.startingPrice),
+        minIncrement: Number(form.minIncrement),
+        closesAt: new Date(form.closesAt).toISOString(),
+        images,
+      });
+
+      navigate("/");
+    } catch (err) {
+      setError(
+        err.response?.data?.message ||
+          "Unable to create listing. Please check your details."
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <div style={{ maxWidth: "600px", margin: "40px auto", padding: "20px" }}>
       <Link to="/">← Back to Home</Link>
@@ -97,7 +165,7 @@ export default function CreateListing() {
       <h1>Sell an Item</h1>
       <p>Provide the details of the item you want to auction.</p>
 
-      <form>
+      <form onSubmit={handleSubmit}>
         <label>Item Title</label>
         <input
           name="title"
@@ -151,6 +219,42 @@ export default function CreateListing() {
         <br />
         <br />
 
+        <label>Item Images (Maximum 5)</label>
+        <input
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={handleImageUpload}
+          disabled={uploading || images.length >= 5}
+        />
+
+        {uploading && <p>Uploading images...</p>}
+
+        {error && <p style={{ color: "red" }}>{error}</p>}
+
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: "10px",
+            margin: "12px 0 20px",
+          }}
+        >
+          {images.map((image, index) => (
+            <img
+              key={image.publicId}
+              src={image.url}
+              alt={`Uploaded item ${index + 1}`}
+              style={{
+                width: "100px",
+                height: "100px",
+                objectFit: "cover",
+                borderRadius: "8px",
+              }}
+            />
+          ))}
+        </div>
+
         <label>Description</label>
         <textarea
           name="description"
@@ -202,8 +306,11 @@ export default function CreateListing() {
         <br />
         <br />
 
-        <button type="button" disabled={!form.title.trim()}>
-          Continue
+        <button
+          type="submit"
+          disabled={uploading || submitting || images.length === 0}
+        >
+          {submitting ? "Creating Listing..." : "Create Listing"}
         </button>
       </form>
     </div>
