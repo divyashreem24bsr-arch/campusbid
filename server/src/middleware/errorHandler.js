@@ -5,6 +5,12 @@ export function notFound(req, res) {
 }
 
 export function errorHandler(err, req, res, next) {
+  if (err.statusCode) {
+    return res.status(err.statusCode).json({
+      message: err.message,
+    });
+  }
+
   if (err.name === "ValidationError") {
     return res.status(400).json({
       message: err.message,

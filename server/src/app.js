@@ -3,6 +3,8 @@ import express from "express";
 import cors from "cors";
 import authRoutes from "./modules/auth/auth.routes.js";
 import userRoutes from "./modules/users/user.routes.js";
+import listingRoutes from "./modules/listings/listing.routes.js";
+import uploadRoutes from "./modules/uploads/upload.routes.js";
 import { notFound, errorHandler } from "./middleware/errorHandler.js";
 
 const app = express();
@@ -20,6 +22,10 @@ app.use("/api/auth", authRoutes);
 
 // User profile routes
 app.use("/api/users", userRoutes);
+
+// Listing routes
+app.use("/api/listings", listingRoutes);
+app.use("/api/uploads", uploadRoutes);
 
 // Error handling
 app.use(notFound);
