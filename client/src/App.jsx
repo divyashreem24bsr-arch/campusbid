@@ -6,6 +6,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import CreateListing from "./pages/CreateListing";
 import ListingDetails from "./pages/ListingDetails";
+import MyListings from "./pages/MyListings";
 
 export default function App() {
   return (
@@ -37,6 +38,15 @@ export default function App() {
         element={
           <ProtectedRoute>
             <ListingDetails />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/my-listings"
+        element={
+          <ProtectedRoute>
+            <MyListings />
           </ProtectedRoute>
         }
       />
