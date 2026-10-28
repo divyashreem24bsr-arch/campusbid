@@ -1,8 +1,11 @@
+
 import { Routes, Route } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import CreateListing from "./pages/CreateListing";
+import ListingDetails from "./pages/ListingDetails";
 
 export default function App() {
   return (
@@ -16,6 +19,24 @@ export default function App() {
         element={
           <ProtectedRoute>
             <Home />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/listings/new"
+        element={
+          <ProtectedRoute>
+            <CreateListing />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/listings/:id"
+        element={
+          <ProtectedRoute>
+            <ListingDetails />
           </ProtectedRoute>
         }
       />
